@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Оформление заказа{% endblock %}
+
+{% block content %}
+<h1>Оформление заказа</h1>
+
+<div class="checkout-container">
+    <!-- Форма оформления -->
+    <div class="checkout-form-section">
+        <form method="POST" action="{{ url_for('checkout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Способ доставки -->
+            <h2>Способ доставки</h2>
+            <div class="form-group">
+                <div class="form-radio-group">
+                    <label class="form-radio">
+                        <input type="radio" name="delivery_type" value="самовывоз"
+                               {% if form.delivery_type.data == 'самовывоз' %}checked{% endif %}>
+                        <span class="form-radio-label">Самовывоз со склада (бесплатно)</span>
+                    </label>
+                    <label class="form-radio">
+                        <input type="radio" name="delivery_type" value="доставка курьером"
+                               {% if form.delivery_type.data == 'доставка курьером' %}checked{% endif %}>
+                        <span class="form-radio-label">Доставка курьером</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Адрес доставки -->
+            <h2>Адрес доставки</h2>
+
+            {% if form.address_id.choices|length > 1 %}
+            <div class="form-group">
+                <label for="address_id">Сохраненные адреса</label>
+                <select name="address_id" id="address_id" class="form-control">
+                    {% for value, label in form.address_id.choices %}
+                    <option value="{{ value }}" {% if form.address_id.data == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="new_address">Или введите новый адрес</label>
+                <input type="text" name="new_address" id="new_address" class="form-control"
+                       value="{{ form.new_address.data or '' }}" placeholder="Улица, дом, квартира">
+            </div>
+
+            <div class="form-group">
+                <label for="new_city">Город</label>
+                <input type="text" name="new_city" id="new_city" class="form-control"
+                       value="{{ form.new_city.data or '' }}" placeholder="Город">
+            </div>
+
+            <div class="form-group">
+                <label for="new_postal_code">Почтовый индекс</label>
+                <input type="text" name="new_postal_code" id="new_postal_code" class="form-control"
+                       value="{{ form.new_postal_code.data or '' }}" placeholder="Индекс">
+            </div>
+
+            <div class="form-group">
+                <label class="form-checkbox">
+                    <input type="checkbox" name="save_address" {% if form.save_address.data %}checked{% endif %}>
+                    <span>Сохранить этот адрес</span>
+                </label>
+            </div>
+
+            <!-- Контактные данные -->
+            <h2>Контактные данные</h2>
+
+            <div class="form-group">
+                <label for="phone" class="required">Телефон</label>
+                <input type="tel" name="phone" id="phone" class="form-control"
+                       value="{{ form.phone.data or '' }}" placeholder="+7 (999) 123-45-67" required>
+                {% if form.phone.errors %}
+                <div class="form-error">{{ form.phone.errors[0] }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="required">Email</label>
+                <input type="email" name="email" id="email" class="form-control"
+                       value="{{ form.email.data or '' }}" placeholder="email@example.com" required>
+                {% if form.email.errors %}
+                <div class="form-error">{{ form.email.errors[0] }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Комментарий -->
+            <div class="form-group">
+                <label for="comment">Комментарий к заказу</label>
+                <textarea name="comment" id="comment" class="form-control"
+                          placeholder="Дополнительная информация...">{{ form.comment.data or '' }}</textarea>
+            </div>
+
+            <!-- Способ оплаты -->
+            <h2>Способ оплаты</h2>
+            <div class="form-group">
+                <div class="form-radio">
+                    <input type="radio" name="payment" value="cash" checked>
+                    <span class="form-radio-label">Наличные при получении</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block">Подтвердить заказ</button>
+        </form>
+    </div>
+
+    <!-- Сводка заказа -->
+    <div class="checkout-summary">
+        <h3>Ваш заказ</h3>
+
+        <div class="checkout-items">
+            {% for item in items %}
+            <div class="checkout-item">
+                <span class="checkout-item-name">{{ item.product.name }}</span>
+                <span class="checkout-item-qty">x{{ item.quantity }}</span>
+                <span class="checkout-item-price">{{ "%.2f"|format(item.subtotal) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="checkout-total">
+            <span>Итого:</span>
+            <span>{{ "%.2f"|format(total) }} руб.</span>
+        </div>
+
+        <p style="margin-top: 20px; color: var(--text-muted); font-size: 0.9rem;">
+            Нажимая кнопку "Подтвердить заказ", вы соглашаетесь с условиями обработки персональных данных.
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="cabinet-layout">
+    <!-- Боковое меню -->
+    <aside class="cabinet-sidebar">
+        <ul class="cabinet-menu">
+            <li><a href="{{ url_for('cabinet') }}">Обзор</a></li>
+            <li><a href="{{ url_for('cabinet_orders') }}" class="active">Мои заказы</a></li>
+            <li><a href="{{ url_for('cabinet_profile') }}">Профиль</a></li>
+            <li><a href="{{ url_for('cabinet_addresses') }}">Адреса доставки</a></li>
+            <li><a href="{{ url_for('logout') }}">Выход</a></li>
+        </ul>
+    </aside>
+    
+    <!-- Основной контент -->
+    <div class="cabinet-content">
+        <div class="cabinet-header">
+            <h1>Заказ #{{ order.id }}</h1>
+            <span class="order-status {{ order.get_status_class() }}">{{ order.status }}</span>
+        </div>
+        
+        <div class="order-detail-grid">
+            <!-- Товары в заказе -->
+            <div class="order-items-list">
+                <h3>Товары в заказе</h3>
+                {% for item in order.items %}
+                <div class="order-item">
+                    <div class="order-item-image">
+                        {% if item.product and item.product.image_url %}
+                        <img src="{{ url_for('static', filename='uploads/' + item.product.image_url) }}" alt="">
+                        {% else %}
+                        [Фото]
+                        {% endif %}
+                    </div>
+                    <div class="order-item-info">
+                        <h4>{{ item.product.name if item.product else 'Товар удален' }}</h4>
+                        <div class="order-item-meta">
+                            {{ "%.2f"|format(item.price_at_time) }} руб. x {{ item.quantity }} шт.
+                        </div>
+                    </div>
+                    <div class="order-item-total">
+                        {{ "%.2f"|format(item.get_subtotal()) }} руб.
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <div style="margin-top: 20px; text-align: right; font-size: 1.3rem;">
+                    <strong>Итого: {{ "%.2f"|format(order.total_amount) }} руб.</strong>
+                </div>
+            </div>
+            
+            <!-- Информация о заказе -->
+            <div class="order-info-card">
+                <h3>Информация о заказе</h3>
+                
+                <div class="order-info-row">
+                    <span class="order-info-label">Дата:</span>
+                    <span class="order-info-value">{{ order.order_date.strftime('%d.%m.%Y %H:%M') }}</span>
+                </div>
+                
+                <div class="order-info-row">
+                    <span class="order-info-label">Статус:</span>
+                    <span class="order-info-value">{{ order.status }}</span>
+                </div>
+                
+                <div class="order-info-row">
+                    <span class="order-info-label">Доставка:</span>
+                    <span class="order-info-value">{{ order.delivery_type }}</span>
+                </div>
+                
+                <div class="order-info-row">
+                    <span class="order-info-label">Адрес:</span>
+                    <span class="order-info-value">{{ order.delivery_address }}</span>
+                </div>
+                
+                <div class="order-info-row">
+                    <span class="order-info-label">Оплата:</span>
+                    <span class="order-info-value">{{ order.payment_type }}</span>
+                </div>
+                
+                <div class="order-info-row">
+                    <span class="order-info-label">Телефон:</span>
+                    <span class="order-info-value">{{ order.phone }}</span>
+                </div>
+                
+                <div class="order-info-row">
+                    <span class="order-info-label">Email:</span>
+                    <span class="order-info-value">{{ order.email }}</span>
+                </div>
+                
+                {% if order.comment %}
+                <div class="order-info-row">
+                    <span class="order-info-label">Комментарий:</span>
+                    <span class="order-info-value">{{ order.comment }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <a href="{{ url_for('cabinet_orders') }}" class="btn btn-secondary">Назад к заказам</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

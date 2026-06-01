@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    <!-- Боковое меню -->
+    <aside class="admin-sidebar">
+        <ul class="admin-menu">
+            <li class="admin-menu-section">
+                <span class="admin-menu-title">Основное</span>
+                <a href="{{ url_for('admin_dashboard') }}">Обзор</a>
+            </li>
+            <li class="admin-menu-section">
+                <span class="admin-menu-title">Каталог</span>
+                <a href="{{ url_for('admin_products') }}">Товары</a>
+                <a href="{{ url_for('admin_categories') }}">Категории</a>
+            </li>
+            <li class="admin-menu-section">
+                <span class="admin-menu-title">Продажи</span>
+                <a href="{{ url_for('admin_orders') }}" class="active">Заказы</a>
+            </li>
+            <li class="admin-menu-section">
+                <span class="admin-menu-title">Пользователи</span>
+                <a href="{{ url_for('admin_users') }}">Пользователи</a>
+            </li>
+        </ul>
+    </aside>
+    
+    <!-- Основной контент -->
+    <div class="admin-content">
+        <div class="admin-header">
+            <h1>Заказ #{{ order.id }}</h1>
+            <a href="{{ url_for('admin_orders') }}" class="btn btn-secondary">Назад к списку</a>
+        </div>
+        
+        <div class="order-detail-grid">
+            <!-- Товары в заказе -->
+            <div>
+                <div class="order-items-list">
+                    <h3>Товары в заказе</h3>
+                    {% for item in order.items %}
+                    <div class="order-item">
+                        <div class="order-item-image">
+                            {% if item.product and item.product.image_url %}
+                            <img src="{{ url_for('static', filename='uploads/' + item.product.image_url) }}" alt="">
+                            {% else %}
+                            [Фото]
+                            {% endif %}
+                        </div>
+                        <div class="order-item-info">
+                            <h4>
+                                {% if item.product %}
+                                <a href="{{ url_for('admin_product_edit', product_id=item.product.id) }}">{{ item.product.name }}</a>
+                                {% else %}
+                                Товар удален
+                                {% endif %}
+                            </h4>
+                            <div class="order-item-meta">
+                                Артикул: {{ item.product.article if item.product else 'N/A' }} | 
+                                {{ "%.2f"|format(item.price_at_time) }} руб. x {{ item.quantity }} шт.
+                            </div>
+                        </div>
+                        <div class="order-item-total">
+                            {{ "%.2f"|format(item.get_subtotal()) }} руб.
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div style="margin-top: 20px; text-align: right; font-size: 1.3rem;">
+                        <strong>Итого: {{ "%.2f"|format(order.total_amount) }} руб.</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Информация о заказе -->
+            <div>
+                <div class="order-info-card" style="margin-bottom: 20px;">
+                    <h3>Информация о заказе</h3>
+                    
+                    <div class="order-info-row">
+                        <span class="order-info-label">Дата:</span>
+                        <span class="order-info-value">{{ order.order_date.strftime('%d.%m.%Y %H:%M') }}</span>
+                    </div>
+                    
+                    <div class="order-info-row">
+                        <span class="order-info-label">Покупатель:</span>
+                        <span class="order-info-value">{{ order.user.username }} ({{ order.user.email }})</span>
+                    </div>
+                    
+                    <div class="order-info-row">
+                        <span class="order-info-label">Телефон:</span>
+                        <span class="order-info-value">{{ order.phone }}</span>
+                    </div>
+                    
+                    <div class="order-info-row">
+                        <span class="order-info-label">Email:</span>
+                        <span class="order-info-value">{{ order.email }}</span>
+                    </div>
+                    
+                    <div class="order-info-row">
+                        <span class="order-info-label">Доставка:</span>
+                        <span class="order-info-value">{{ order.delivery_type }}</span>
+                    </div>
+                    
+                    <div class="order-info-row">
+                        <span class="order-info-label">Адрес:</span>
+                        <span class="order-info-value">{{ order.delivery_address }}</span>
+                    </div>
+                    
+                    <div class="order-info-row">
+                        <span class="order-info-label">Оплата:</span>
+                        <span class="order-info-value">{{ order.payment_type }}</span>
+                    </div>
+                    
+                    {% if order.comment %}
+                    <div class="order-info-row">
+                        <span class="order-info-label">Комментарий:</span>
+                        <span class="order-info-value">{{ order.comment }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Изменение статуса -->
+                <div class="order-info-card">
+                    <h3>Статус заказа</h3>
+                    
+                    <p>Текущий статус: <span class="order-status {{ order.get_status_class() }}">{{ order.status }}</span></p>
+                    
+                    <form method="POST" action="{{ url_for('admin_order_update', order_id=order.id) }}" style="margin-top: 15px;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="form-group">
+                            <label for="status">Изменить статус</label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="новый" {% if order.status == 'новый' %}selected{% endif %}>Новый</option>
+                                <option value="в обработке" {% if order.status == 'в обработке' %}selected{% endif %}>В обработке</option>
+                                <option value="оплачен" {% if order.status == 'оплачен' %}selected{% endif %}>Оплачен</option>
+                                <option value="отправлен" {% if order.status == 'отправлен' %}selected{% endif %}>Отправлен</option>
+                                <option value="выполнен" {% if order.status == 'выполнен' %}selected{% endif %}>Выполнен</option>
+                                <option value="отменен" {% if order.status == 'отменен' %}selected{% endif %}>Отменен</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Обновить статус</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Ошибка сервера{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-code">500</div>
+    <h1>Внутренняя ошибка сервера</h1>
+    <p>Произошла непредвиденная ошибка. Мы уже работаем над ее устранением.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Вернуться на главную</a>
+</div>
+{% endblock %}

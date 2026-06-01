@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+<div class="cabinet-layout">
+    <!-- Боковое меню -->
+    <aside class="cabinet-sidebar">
+        <ul class="cabinet-menu">
+            <li><a href="{{ url_for('cabinet') }}">Обзор</a></li>
+            <li><a href="{{ url_for('cabinet_orders') }}">Мои заказы</a></li>
+            <li><a href="{{ url_for('cabinet_profile') }}" class="active">Профиль</a></li>
+            <li><a href="{{ url_for('cabinet_addresses') }}">Адреса доставки</a></li>
+            <li><a href="{{ url_for('logout') }}">Выход</a></li>
+        </ul>
+    </aside>
+    
+    <!-- Основной контент -->
+    <div class="cabinet-content">
+        <div class="cabinet-header">
+            <h1>Редактирование профиля</h1>
+        </div>
+        
+        <form method="POST" action="{{ url_for('cabinet_profile') }}" style="max-width: 500px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group">
+                <label for="username" class="required">Имя пользователя</label>
+                <input type="text" name="username" id="username" class="form-control" 
+                       value="{{ form.username.data or current_user.username }}" required>
+                {% if form.username.errors %}
+                <div class="form-error">{{ form.username.errors[0] }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="email" class="required">Email</label>
+                <input type="email" name="email" id="email" class="form-control" 
+                       value="{{ form.email.data or current_user.email }}" required>
+                {% if form.email.errors %}
+                <div class="form-error">{{ form.email.errors[0] }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Телефон</label>
+                <input type="tel" name="phone" id="phone" class="form-control" 
+                       value="{{ form.phone.data or current_user.phone or '' }}">
+            </div>
+            
+            <hr style="margin: 30px 0; border-color: var(--border-color);">
+            
+            <h3>Изменить пароль</h3>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Оставьте поля пустыми, если не хотите менять пароль</p>
+            
+            <div class="form-group">
+                <label for="current_password">Текущий пароль</label>
+                <input type="password" name="current_password" id="current_password" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="new_password">Новый пароль</label>
+                <input type="password" name="new_password" id="new_password" class="form-control">
+                <div class="form-hint">Минимум 6 символов</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="new_password2">Повторите новый пароль</label>
+                <input type="password" name="new_password2" id="new_password2" class="form-control">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

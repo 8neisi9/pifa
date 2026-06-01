@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="cabinet-layout">
+    <!-- Боковое меню -->
+    <aside class="cabinet-sidebar">
+        <ul class="cabinet-menu">
+            <li><a href="{{ url_for('cabinet') }}" class="active">Обзор</a></li>
+            <li><a href="{{ url_for('cabinet_orders') }}">Мои заказы</a></li>
+            <li><a href="{{ url_for('cabinet_profile') }}">Профиль</a></li>
+            <li><a href="{{ url_for('cabinet_addresses') }}">Адреса доставки</a></li>
+            <li><a href="{{ url_for('logout') }}">Выход</a></li>
+        </ul>
+    </aside>
+    
+    <!-- Основной контент -->
+    <div class="cabinet-content">
+        <div class="cabinet-header">
+            <h1>Добро пожаловать, {{ current_user.username }}!</h1>
+        </div>
+        
+        <!-- Статистика -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ total_orders }}</div>
+                <div class="stat-label">Всего заказов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ completed_orders }}</div>
+                <div class="stat-label">Выполненных</div>
+            </div>
+        </div>
+        
+        <!-- Последние заказы -->
+        <h2>Последние заказы</h2>
+        
+        {% if recent_orders %}
+        <div class="orders-list">
+            {% for order in recent_orders %}
+            <div class="order-card">
+                <div class="order-card-header">
+                    <div>
+                        <span class="order-number">Заказ #{{ order.id }}</span>
+                        <span class="order-date">от {{ order.order_date.strftime('%d.%m.%Y %H:%M') }}</span>
+                    </div>
+                    <span class="order-status {{ order.get_status_class() }}">{{ order.status }}</span>
+                </div>
+                <div class="order-card-body">
+                    <div class="order-info">
+                        Позиций: {{ order.get_items_count() }} | {{ order.delivery_type }}
+                    </div>
+                    <div class="order-total">{{ "%.2f"|format(order.total_amount) }} руб.</div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <a href="{{ url_for('cabinet_order_detail', order_id=order.id) }}" class="btn btn-secondary btn-sm">Подробнее</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="{{ url_for('cabinet_orders') }}" class="btn btn-secondary">Все заказы</a>
+        </div>
+        {% else %}
+        <p>У вас пока нет заказов. <a href="{{ url_for('catalog') }}">Перейти в каталог</a></p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

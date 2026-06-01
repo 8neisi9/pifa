@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<!-- Баннер -->
+<section class="hero">
+    <h1>Добро пожаловать в <span>PifStroiActiv</span></h1>
+    <p>Широкий выбор строительных и отделочных материалов по выгодным ценам. Доставка по всей России.</p>
+    <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-lg">Перейти в каталог</a>
+</section>
+
+<!-- Категории -->
+<section>
+    <div class="section-title">
+        <h2>Категории товаров</h2>
+        <a href="{{ url_for('catalog') }}" class="btn btn-secondary btn-sm">Все категории</a>
+    </div>
+    
+    <div class="categories-grid">
+        {% for category in categories %}
+        <div class="category-card">
+            <h3><a href="{{ url_for('catalog', category_id=category.id) }}">{{ category.name }}</a></h3>
+            <p>{{ category.description|truncate(50) if category.description else 'Смотреть товары' }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Популярные товары -->
+{% if popular_products %}
+<section>
+    <div class="section-title">
+        <h2>Популярные товары</h2>
+        <a href="{{ url_for('catalog') }}" class="btn btn-secondary btn-sm">Все товары</a>
+    </div>
+    
+    <div class="products-grid">
+        {% for product in popular_products %}
+        <div class="product-card">
+            <div class="product-card-image">
+                {% if product.image_url %}
+                <img src="{{ url_for('static', filename='uploads/' + product.image_url) }}" alt="{{ product.name }}">
+                {% else %}
+                <span class="no-image">[Фото]</span>
+                {% endif %}
+            </div>
+            <div class="product-card-body">
+                {% if product.category %}
+                <div class="product-card-category">{{ product.category.name }}</div>
+                {% endif %}
+                <h3 class="product-card-title">
+                    <a href="{{ url_for('product', product_id=product.id) }}">{{ product.name }}</a>
+                </h3>
+                <div class="product-card-article">Арт.: {{ product.article }}</div>
+                <div class="product-card-price">{{ "%.2f"|format(product.price) }} руб.</div>
+                <div class="product-card-stock {% if product.stock > 10 %}in-stock{% elif product.stock > 0 %}low-stock{% else %}out-of-stock{% endif %}">
+                    {{ product.get_stock_status() }}
+                </div>
+                <div class="product-card-actions">
+                    {% if product.stock > 0 %}
+                    <form action="{{ url_for('cart_add', product_id=product.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-primary btn-sm">В корзину</button>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-secondary btn-sm" disabled>Нет в наличии</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if current_category %}{{ current_category.name }}{% else %}Каталог{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Хлебные крошки -->
+<div class="breadcrumbs">
+    <a href="{{ url_for('index') }}">Главная</a>
+    <span>/</span>
+    {% if current_category %}
+    <a href="{{ url_for('catalog') }}">Каталог</a>
+    <span>/</span>
+    <span class="current">{{ current_category.name }}</span>
+    {% else %}
+    <span class="current">Каталог</span>
+    {% endif %}
+</div>
+
+<h1>{% if current_category %}{{ current_category.name }}{% else %}Каталог товаров{% endif %}</h1>
+
+{% if query %}
+<p>Результаты поиска по запросу: "{{ query }}"</p>
+{% endif %}
+
+<!-- Фильтры и сортировка -->
+<div class="admin-filters">
+    <form action="{{ url_for('catalog') }}" method="GET" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+        <input type="text" name="query" class="form-control" placeholder="Поиск..." value="{{ query }}">
+        
+        <select name="category_id" class="form-control">
+            <option value="0">Все категории</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+        
+        <select name="sort" class="form-control">
+            <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>По названию (А-Я)</option>
+            <option value="name_desc" {% if sort == 'name_desc' %}selected{% endif %}>По названию (Я-А)</option>
+            <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>По цене (возрастание)</option>
+            <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>По цене (убывание)</option>
+            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Сначала новые</option>
+        </select>
+        
+        <button type="submit" class="btn btn-primary">Применить</button>
+        <a href="{{ url_for('catalog') }}" class="btn btn-secondary">Сбросить</a>
+    </form>
+</div>
+
+<!-- Сетка товаров -->
+{% if products %}
+<div class="products-grid">
+    {% for product in products %}
+    <div class="product-card">
+        <div class="product-card-image">
+            {% if product.image_url %}
+            <img src="{{ url_for('static', filename='uploads/' + product.image_url) }}" alt="{{ product.name }}">
+            {% else %}
+            <span class="no-image">[Фото]</span>
+            {% endif %}
+        </div>
+        <div class="product-card-body">
+            {% if product.category %}
+            <div class="product-card-category">{{ product.category.name }}</div>
+            {% endif %}
+            <h3 class="product-card-title">
+                <a href="{{ url_for('product', product_id=product.id) }}">{{ product.name }}</a>
+            </h3>
+            <div class="product-card-article">Арт.: {{ product.article }}</div>
+            <div class="product-card-price">{{ "%.2f"|format(product.price) }} руб.</div>
+            <div class="product-card-stock {% if product.stock > 10 %}in-stock{% elif product.stock > 0 %}low-stock{% else %}out-of-stock{% endif %}">
+                {{ product.get_stock_status() }}
+            </div>
+            <div class="product-card-actions">
+                {% if product.stock > 0 %}
+                <form action="{{ url_for('cart_add', product_id=product.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary btn-sm">В корзину</button>
+                </form>
+                {% else %}
+                <button class="btn btn-secondary btn-sm" disabled>Нет в наличии</button>
+                {% endif %}
+                <a href="{{ url_for('product', product_id=product.id) }}" class="btn btn-secondary btn-sm">Подробнее</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Пагинация -->
+{% if pagination.pages > 1 %}
+<div class="pagination">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('catalog', page=pagination.prev_num, category_id=category_id, query=query, sort=sort) }}">Назад</a>
+    {% else %}
+    <span class="disabled">Назад</span>
+    {% endif %}
+    
+    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if page_num %}
+            {% if page_num == pagination.page %}
+            <span class="active">{{ page_num }}</span>
+            {% else %}
+            <a href="{{ url_for('catalog', page=page_num, category_id=category_id, query=query, sort=sort) }}">{{ page_num }}</a>
+            {% endif %}
+        {% else %}
+        <span>...</span>
+        {% endif %}
+    {% endfor %}
+    
+    {% if pagination.has_next %}
+    <a href="{{ url_for('catalog', page=pagination.next_num, category_id=category_id, query=query, sort=sort) }}">Вперед</a>
+    {% else %}
+    <span class="disabled">Вперед</span>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="cart-empty">
+    <h2>Товары не найдены</h2>
+    <p>Попробуйте изменить параметры поиска или фильтрации</p>
+    <a href="{{ url_for('catalog') }}" class="btn btn-primary">Показать все товары</a>
+</div>
+{% endif %}
+{% endblock %}

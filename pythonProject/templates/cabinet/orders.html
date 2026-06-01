@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Мои заказы{% endblock %}
+
+{% block content %}
+<div class="cabinet-layout">
+    <!-- Боковое меню -->
+    <aside class="cabinet-sidebar">
+        <ul class="cabinet-menu">
+            <li><a href="{{ url_for('cabinet') }}">Обзор</a></li>
+            <li><a href="{{ url_for('cabinet_orders') }}" class="active">Мои заказы</a></li>
+            <li><a href="{{ url_for('cabinet_profile') }}">Профиль</a></li>
+            <li><a href="{{ url_for('cabinet_addresses') }}">Адреса доставки</a></li>
+            <li><a href="{{ url_for('logout') }}">Выход</a></li>
+        </ul>
+    </aside>
+    
+    <!-- Основной контент -->
+    <div class="cabinet-content">
+        <div class="cabinet-header">
+            <h1>Мои заказы</h1>
+        </div>
+        
+        {% if orders.items %}
+        <div class="orders-list">
+            {% for order in orders.items %}
+            <div class="order-card">
+                <div class="order-card-header">
+                    <div>
+                        <span class="order-number">Заказ #{{ order.id }}</span>
+                        <span class="order-date">от {{ order.order_date.strftime('%d.%m.%Y %H:%M') }}</span>
+                    </div>
+                    <span class="order-status {{ order.get_status_class() }}">{{ order.status }}</span>
+                </div>
+                <div class="order-card-body">
+                    <div class="order-info">
+                        Позиций: {{ order.get_items_count() }} | {{ order.delivery_type }}
+                    </div>
+                    <div class="order-total">{{ "%.2f"|format(order.total_amount) }} руб.</div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <a href="{{ url_for('cabinet_order_detail', order_id=order.id) }}" class="btn btn-secondary btn-sm">Подробнее</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Пагинация -->
+        {% if orders.pages > 1 %}
+        <div class="pagination">
+            {% if orders.has_prev %}
+            <a href="{{ url_for('cabinet_orders', page=orders.prev_num) }}">Назад</a>
+            {% endif %}
+            
+            {% for page_num in orders.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num == orders.page %}
+                    <span class="active">{{ page_num }}</span>
+                    {% else %}
+                    <a href="{{ url_for('cabinet_orders', page=page_num) }}">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                <span>...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if orders.has_next %}
+            <a href="{{ url_for('cabinet_orders', page=orders.next_num) }}">Вперед</a>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <p>У вас пока нет заказов. <a href="{{ url_for('catalog') }}">Перейти в каталог</a></p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

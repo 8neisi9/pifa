@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ оформлен{% endblock %}
+
+{% block content %}
+<div class="order-success">
+    <div class="order-success-icon">
+        [OK]
+    </div>
+    
+    <h1>Спасибо за заказ!</h1>
+    
+    <div class="order-success-number">
+        Номер вашего заказа: #{{ order.id }}
+    </div>
+    
+    <div class="order-success-info">
+        <p>Заказ успешно оформлен. Мы свяжемся с вами в ближайшее время для подтверждения.</p>
+        <p>Информация о заказе отправлена на email: <strong>{{ order.email }}</strong></p>
+    </div>
+    
+    <div style="margin-top: 30px;">
+        <a href="{{ url_for('cabinet_order_detail', order_id=order.id) }}" class="btn btn-primary">Посмотреть заказ</a>
+        <a href="{{ url_for('catalog') }}" class="btn btn-secondary">Продолжить покупки</a>
+    </div>
+</div>
+{% endblock %}

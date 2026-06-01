@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    <!-- Боковое меню -->
+    <aside class="admin-sidebar">
+        <ul class="admin-menu">
+            <li class="admin-menu-section">
+                <span class="admin-menu-title">Основное</span>
+                <a href="{{ url_for('admin_dashboard') }}">Обзор</a>
+            </li>
+            <li class="admin-menu-section">
+                <span class="admin-menu-title">Каталог</span>
+                <a href="{{ url_for('admin_products') }}" class="active">Товары</a>
+                <a href="{{ url_for('admin_categories') }}">Категории</a>
+            </li>
+            <li class="admin-menu-section">
+                <span class="admin-menu-title">Продажи</span>
+                <a href="{{ url_for('admin_orders') }}">Заказы</a>
+            </li>
+            <li class="admin-menu-section">
+                <span class="admin-menu-title">Пользователи</span>
+                <a href="{{ url_for('admin_users') }}">Пользователи</a>
+            </li>
+        </ul>
+    </aside>
+    
+    <!-- Основной контент -->
+    <div class="admin-content">
+        <div class="admin-header">
+            <h1>{{ title }}</h1>
+            <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">Назад к списку</a>
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data" style="max-width: 700px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="article" class="required">Артикул</label>
+                    <input type="text" name="article" id="article" class="form-control" 
+                           value="{{ form.article.data or '' }}" required>
+                    {% if form.article.errors %}
+                    <div class="form-error">{{ form.article.errors[0] }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="category_id" class="required">Категория</label>
+                    <select name="category_id" id="category_id" class="form-control" required>
+                        {% for value, label in form.category_id.choices %}
+                        <option value="{{ value }}" {% if form.category_id.data == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="name" class="required">Название товара</label>
+                <input type="text" name="name" id="name" class="form-control" 
+                       value="{{ form.name.data or '' }}" required>
+                {% if form.name.errors %}
+                <div class="form-error">{{ form.name.errors[0] }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Описание</label>
+                <textarea name="description" id="description" class="form-control">{{ form.description.data or '' }}</textarea>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="price" class="required">Цена (руб.)</label>
+                    <input type="number" name="price" id="price" class="form-control" 
+                           value="{{ form.price.data or '' }}" step="0.01" min="0.01" required>
+                    {% if form.price.errors %}
+                    <div class="form-error">{{ form.price.errors[0] }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="stock" class="required">Количество на складе</label>
+                    <input type="number" name="stock" id="stock" class="form-control" 
+                           value="{{ form.stock.data if form.stock.data is not none else 0 }}" min="0" required>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="brand">Бренд</label>
+                    <input type="text" name="brand" id="brand" class="form-control" 
+                           value="{{ form.brand.data or '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="color">Цвет</label>
+                    <input type="text" name="color" id="color" class="form-control" 
+                           value="{{ form.color.data or '' }}">
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="weight">Вес (кг)</label>
+                    <input type="number" name="weight" id="weight" class="form-control" 
+                           value="{{ form.weight.data or '' }}" step="0.01" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="dimensions">Размеры</label>
+                    <input type="text" name="dimensions" id="dimensions" class="form-control" 
+                           value="{{ form.dimensions.data or '' }}" placeholder="например: 10x20x5 см">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="image">Изображение</label>
+                <input type="file" name="image" id="image" class="form-control" accept="image/*">
+                <div class="form-hint">Поддерживаемые форматы: JPG, PNG, GIF, WebP. Максимум 16 МБ.</div>
+                {% if product and product.image_url %}
+                <div style="margin-top: 10px;">
+                    <p>Текущее изображение:</p>
+                    <img src="{{ url_for('static', filename='uploads/' + product.image_url) }}" 
+                         alt="" style="max-width: 200px; border-radius: var(--border-radius);">
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-checkbox">
+                    <input type="checkbox" name="is_active" {% if form.is_active.data or not product %}checked{% endif %}>
+                    <span>Товар активен (отображается в каталоге)</span>
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

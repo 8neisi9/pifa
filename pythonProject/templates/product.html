@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<!-- Хлебные крошки -->
+<div class="breadcrumbs">
+    <a href="{{ url_for('index') }}">Главная</a>
+    <span>/</span>
+    <a href="{{ url_for('catalog') }}">Каталог</a>
+    <span>/</span>
+    {% if product.category %}
+    <a href="{{ url_for('catalog', category_id=product.category_id) }}">{{ product.category.name }}</a>
+    <span>/</span>
+    {% endif %}
+    <span class="current">{{ product.name }}</span>
+</div>
+
+<div class="product-detail">
+    <!-- Изображение товара -->
+    <div class="product-detail-image">
+        {% if product.image_url %}
+        <img src="{{ url_for('static', filename='uploads/' + product.image_url) }}" alt="{{ product.name }}">
+        {% else %}
+        <span class="no-image">[Фото товара]</span>
+        {% endif %}
+    </div>
+    
+    <!-- Информация о товаре -->
+    <div class="product-detail-info">
+        {% if product.category %}
+        <div class="product-detail-category">{{ product.category.name }}</div>
+        {% endif %}
+        
+        <h1 class="product-detail-title">{{ product.name }}</h1>
+        <div class="product-detail-article">Артикул: {{ product.article }}</div>
+        
+        <div class="product-detail-price">{{ "%.2f"|format(product.price) }} руб.</div>
+        
+        <div class="product-detail-stock {% if product.stock > 0 %}in-stock{% else %}out-of-stock{% endif %}">
+            {{ product.get_stock_status() }}
+        </div>
+        
+        <!-- Характеристики -->
+        <div class="product-specs">
+            <h3>Характеристики</h3>
+            <ul class="product-specs-list">
+                {% if product.brand %}
+                <li>
+                    <span class="spec-label">Бренд:</span>
+                    <span class="spec-value">{{ product.brand }}</span>
+                </li>
+                {% endif %}
+                {% if product.color %}
+                <li>
+                    <span class="spec-label">Цвет:</span>
+                    <span class="spec-value">{{ product.color }}</span>
+                </li>
+                {% endif %}
+                {% if product.weight %}
+                <li>
+                    <span class="spec-label">Вес:</span>
+                    <span class="spec-value">{{ product.weight }} кг</span>
+                </li>
+                {% endif %}
+                {% if product.dimensions %}
+                <li>
+                    <span class="spec-label">Размеры:</span>
+                    <span class="spec-value">{{ product.dimensions }}</span>
+                </li>
+                {% endif %}
+                {% if product.category %}
+                <li>
+                    <span class="spec-label">Категория:</span>
+                    <span class="spec-value">{{ product.category.name }}</span>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        
+        <!-- Форма добавления в корзину -->
+        {% if product.stock > 0 %}
+        <form action="{{ url_for('cart_add', product_id=product.id) }}" method="POST" class="add-to-cart-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="quantity-input">
+                <label for="quantity">Количество:</label>
+                <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ product.stock }}">
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">Добавить в корзину</button>
+        </form>
+        {% else %}
+        <button class="btn btn-secondary btn-lg" disabled>Нет в наличии</button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Описание товара -->
+{% if product.description %}
+<div class="product-description">
+    <h3>Описание</h3>
+    <p>{{ product.description }}</p>
+</div>
+{% endif %}
+
+<!-- Похожие товары -->
+{% if related_products %}
+<section class="related-products">
+    <h2>Похожие товары</h2>
+    <div class="products-grid">
+        {% for related in related_products %}
+        <div class="product-card">
+            <div class="product-card-image">
+                {% if related.image_url %}
+                <img src="{{ url_for('static', filename='uploads/' + related.image_url) }}" alt="{{ related.name }}">
+                {% else %}
+                <span class="no-image">[Фото]</span>
+                {% endif %}
+            </div>
+            <div class="product-card-body">
+                <h3 class="product-card-title">
+                    <a href="{{ url_for('product', product_id=related.id) }}">{{ related.name }}</a>
+                </h3>
+                <div class="product-card-article">Арт.: {{ related.article }}</div>
+                <div class="product-card-price">{{ "%.2f"|format(related.price) }} руб.</div>
+                <div class="product-card-stock {% if related.stock > 0 %}in-stock{% else %}out-of-stock{% endif %}">
+                    {{ related.get_stock_status() }}
+                </div>
+                <div class="product-card-actions">
+                    {% if related.stock > 0 %}
+                    <form action="{{ url_for('cart_add', product_id=related.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-primary btn-sm">В корзину</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

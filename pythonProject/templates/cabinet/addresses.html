@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Адреса доставки{% endblock %}
+
+{% block content %}
+<div class="cabinet-layout">
+    <!-- Боковое меню -->
+    <aside class="cabinet-sidebar">
+        <ul class="cabinet-menu">
+            <li><a href="{{ url_for('cabinet') }}">Обзор</a></li>
+            <li><a href="{{ url_for('cabinet_orders') }}">Мои заказы</a></li>
+            <li><a href="{{ url_for('cabinet_profile') }}">Профиль</a></li>
+            <li><a href="{{ url_for('cabinet_addresses') }}" class="active">Адреса доставки</a></li>
+            <li><a href="{{ url_for('logout') }}">Выход</a></li>
+        </ul>
+    </aside>
+    
+    <!-- Основной контент -->
+    <div class="cabinet-content">
+        <div class="cabinet-header">
+            <h1>Адреса доставки</h1>
+        </div>
+        
+        <!-- Существующие адреса -->
+        {% if addresses %}
+        <div class="addresses-grid">
+            {% for address in addresses %}
+            <div class="address-card {% if address.is_default %}default{% endif %}">
+                {% if address.is_default %}
+                <span class="address-default-badge">По умолчанию</span>
+                {% endif %}
+                
+                <div class="address-text">
+                    <p><strong>{{ address.address_line }}</strong></p>
+                    {% if address.city %}<p>{{ address.city }}</p>{% endif %}
+                    {% if address.postal_code %}<p>{{ address.postal_code }}</p>{% endif %}
+                </div>
+                
+                <div class="address-actions">
+                    {% if not address.is_default %}
+                    <form action="{{ url_for('cabinet_address_set_default', address_id=address.id) }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-secondary btn-sm">По умолчанию</button>
+                    </form>
+                    {% endif %}
+                    
+                    <form action="{{ url_for('cabinet_address_delete', address_id=address.id) }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>У вас пока нет сохраненных адресов.</p>
+        {% endif %}
+        
+        <!-- Форма добавления адреса -->
+        <h2 style="margin-top: 40px;">Добавить новый адрес</h2>
+        
+        <form method="POST" action="{{ url_for('cabinet_addresses') }}" style="max-width: 500px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group">
+                <label for="address_line" class="required">Адрес (улица, дом, квартира)</label>
+                <input type="text" name="address_line" id="address_line" class="form-control" 
+                       value="{{ form.address_line.data or '' }}" required>
+                {% if form.address_line.errors %}
+                <div class="form-error">{{ form.address_line.errors[0] }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="city">Город</label>
+                <input type="text" name="city" id="city" class="form-control" 
+                       value="{{ form.city.data or '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="postal_code">Почтовый индекс</label>
+                <input type="text" name="postal_code" id="postal_code" class="form-control" 
+                       value="{{ form.postal_code.data or '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-checkbox">
+                    <input type="checkbox" name="is_default" {% if form.is_default.data %}checked{% endif %}>
+                    <span>Сделать адресом по умолчанию</span>
+                </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Добавить адрес</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

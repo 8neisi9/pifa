@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Корзина{% endblock %}
+
+{% block content %}
+<h1>Корзина</h1>
+
+<div class="cart-container">
+    {% if items %}
+    <table class="cart-table">
+        <thead>
+            <tr>
+                <th>Товар</th>
+                <th>Цена</th>
+                <th>Количество</th>
+                <th>Сумма</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td data-label="Товар">
+                    <div class="cart-item-info">
+                        <div class="cart-item-image">
+                            {% if item.product.image_url %}
+                            <img src="{{ url_for('static', filename='uploads/' + item.product.image_url) }}" alt="{{ item.product.name }}">
+                            {% else %}
+                            [Фото]
+                            {% endif %}
+                        </div>
+                        <div class="cart-item-details">
+                            <h4><a href="{{ url_for('product', product_id=item.product.id) }}">{{ item.product.name }}</a></h4>
+                            <span class="cart-item-article">Арт.: {{ item.product.article }}</span>
+                        </div>
+                    </div>
+                </td>
+                <td data-label="Цена" class="cart-item-price">
+                    {{ "%.2f"|format(item.product.price) }} руб.
+                </td>
+                <td data-label="Количество">
+                    <div class="cart-quantity-controls">
+                        <form action="{{ url_for('cart_update', product_id=item.product.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="decrease">
+                            <button type="submit" class="qty-btn">-</button>
+                        </form>
+                        <span class="cart-quantity-value">{{ item.quantity }}</span>
+                        <form action="{{ url_for('cart_update', product_id=item.product.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="increase">
+                            <button type="submit" class="qty-btn">+</button>
+                        </form>
+                    </div>
+                </td>
+                <td data-label="Сумма" class="cart-item-subtotal">
+                    {{ "%.2f"|format(item.subtotal) }} руб.
+                </td>
+                <td data-label="" class="cart-item-remove">
+                    <form action="{{ url_for('cart_remove', product_id=item.product.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="cart-summary">
+        <div class="cart-total">
+            Итого: <span>{{ "%.2f"|format(total) }} руб.</span>
+        </div>
+        <div class="cart-actions">
+            <form action="{{ url_for('cart_clear') }}" method="POST" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-secondary">Очистить корзину</button>
+            </form>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-lg">Оформить заказ</a>
+            {% else %}
+            <a href="{{ url_for('login', next=url_for('checkout')) }}" class="btn btn-primary btn-lg">Войти для оформления</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% else %}
+    <div class="cart-empty">
+        <h2>Ваша корзина пуста</h2>
+        <p>Добавьте товары из каталога</p>
+        <a href="{{ url_for('catalog') }}" class="btn btn-primary">Перейти в каталог</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
